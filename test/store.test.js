@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   loadTemplate, createEmployee, updateEmployee, updateTask,
-  importHerpCsv, isTaskApplicable, progressOf, addDays, parseCsv,
+  importHerpCsv, registerFromWebhook, isTaskApplicable, progressOf, addDays, parseCsv,
 } from '../lib/store.js';
 
 const template = loadTemplate();
@@ -122,4 +122,46 @@ test('importHerpCsv: 必須列がないCSVはエラー', () => {
   const db = emptyDb();
   const result = importHerpCsv(db, template, '名字,メール\n山田,a@example.com');
   assert.ok(result.errors);
+});
+
+test('registerFromWebhook: 英語キーのフラットなペイロードを登録できる', () => {
+  const db = emptyDb();
+  const { employee, errors } = registerFromWebhook(db, template, {
+    name: '山田 太郎',
+    email: 'taro@example.com',
+    position: 'エンジニア',
+    join_date: '2026/9/1',
+  });
+  assert.equal(errors, undefined);
+  assert.equal(employee.joinDate, '2026-09-01');
+  assert.equal(employee.source, 'herp-webhook');
+  assert.equal(employee.tasks.length, template.tasks.length);
+});
+
+test('registerFromWebhook: candidateネスト・日本語キーのペイロードも解釈する', () => {
+  const db = emptyDb();
+  const { employee, errors } = registerFromWebhook(db, template, {
+    event: 'candidate.hired',
+    candidate: { '氏名': '佐藤 花子', 'メールアドレス': 'hanako@example.com', '入社予定日': '2026年10月1日', '応募ポジション': 'セールス' },
+  });
+  assert.equal(errors, undefined);
+  assert.equal(employee.name, '佐藤 花子');
+  assert.equal(employee.joinDate, '2026-10-01');
+  assert.equal(employee.position, 'セールス');
+});
+
+test('registerFromWebhook: 重複は登録せず duplicate を返す', () => {
+  const db = emptyDb();
+  const payload = { name: '山田 太郎', email: 'taro@example.com', joinDate: '2026-09-01' };
+  registerFromWebhook(db, template, payload);
+  const second = registerFromWebhook(db, template, payload);
+  assert.ok(second.duplicate);
+  assert.equal(db.employees.length, 1);
+});
+
+test('registerFromWebhook: 氏名・入社日を特定できない場合はエラー', () => {
+  const db = emptyDb();
+  assert.ok(registerFromWebhook(db, template, { email: 'a@example.com' }).errors);
+  assert.ok(registerFromWebhook(db, template, { name: '山田', joinDate: '来月' }).errors);
+  assert.ok(registerFromWebhook(db, template, null).errors);
 });

@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   loadDb, saveDb, loadTemplate,
-  createEmployee, updateEmployee, updateTask, importHerpCsv,
+  createEmployee, updateEmployee, updateTask, importHerpCsv, registerFromWebhook,
 } from './lib/store.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -114,6 +114,25 @@ async function handleApi(req, res, url) {
       imported: result.imported,
       skipped: result.skipped,
     });
+  }
+
+  // POST /api/webhook/herp — HERPの採用決定Webhookを受けて自動登録する
+  // HERP_WEBHOOK_TOKEN を設定した場合、?token= または X-Webhook-Token ヘッダーの一致を必須にする
+  if (req.method === 'POST' && url.pathname === '/api/webhook/herp') {
+    const expected = process.env.HERP_WEBHOOK_TOKEN;
+    if (expected) {
+      const got = url.searchParams.get('token') || req.headers['x-webhook-token'];
+      if (got !== expected) return sendJson(res, 401, { errors: ['認証トークンが一致しません'] });
+    }
+    const payload = await readJsonBody(req);
+    const result = registerFromWebhook(db, template, payload);
+    if (result.errors) return sendJson(res, 400, { errors: result.errors });
+    if (result.duplicate) {
+      return sendJson(res, 200, { ok: true, duplicate: true, message: `既に登録済みです（${result.duplicate.name}）` });
+    }
+    saveDb(db);
+    console.log(`[webhook] ${result.employee.name}（入社日 ${result.employee.joinDate}）を自動登録しました`);
+    return sendJson(res, 201, { ok: true, employee: result.employee });
   }
 
   return sendJson(res, 404, { errors: ['APIが見つかりません'] });
