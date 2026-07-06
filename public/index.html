@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入社手続き管理 | 人事労務効率化</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <a class="app-title" href="#/">
+      <span class="app-logo">🗂</span>
+      <span>入社手続き管理</span>
+    </a>
+    <div class="header-actions">
+      <button class="btn btn-secondary" id="btn-import">HERP CSVインポート</button>
+      <button class="btn btn-primary" id="btn-add">＋ 入社者を登録</button>
+    </div>
+  </header>
+
+  <main id="app"></main>
+
+  <!-- 入社者登録モーダル -->
+  <dialog id="dialog-add">
+    <form id="form-add" method="dialog">
+      <h2>入社者を登録</h2>
+      <p class="dialog-note">登録すると、契約締結〜労務手続きまでの標準タスクが入社日から逆算した期日付きで自動生成されます。</p>
+      <label>氏名 <span class="req">必須</span>
+        <input name="name" required placeholder="山田 太郎">
+      </label>
+      <label>メールアドレス
+        <input name="email" type="email" placeholder="taro@example.com">
+      </label>
+      <div class="form-row">
+        <label>ポジション
+          <input name="position" placeholder="ソフトウェアエンジニア">
+        </label>
+        <label>部署
+          <input name="department" placeholder="開発部">
+        </label>
+      </div>
+      <div class="form-row">
+        <label>入社日 <span class="req">必須</span>
+          <input name="joinDate" type="date" required>
+        </label>
+        <label>社宅利用
+          <select name="housingUse">
+            <option value="未確認">未確認</option>
+            <option value="利用する">利用する</option>
+            <option value="利用しない">利用しない</option>
+          </select>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" data-close>キャンセル</button>
+        <button type="submit" class="btn btn-primary">登録する</button>
+      </div>
+      <p class="form-error" id="add-error"></p>
+    </form>
+  </dialog>
+
+  <!-- CSVインポートモーダル -->
+  <dialog id="dialog-import">
+    <form id="form-import" method="dialog">
+      <h2>HERP CSVインポート</h2>
+      <p class="dialog-note">
+        HERPからエクスポートした候補者CSVを取り込みます。<br>
+        「氏名」と「入社日（入社予定日）」の列が必須です。「メールアドレス」「ポジション」「部署」列があれば併せて取り込みます。
+      </p>
+      <label>CSVファイル
+        <input type="file" id="import-file" accept=".csv,text/csv">
+      </label>
+      <label>または CSVテキストを貼り付け
+        <textarea id="import-text" rows="6" placeholder="氏名,メールアドレス,応募ポジション,入社予定日&#10;山田 太郎,taro@example.com,エンジニア,2026-08-01"></textarea>
+      </label>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" data-close>キャンセル</button>
+        <button type="submit" class="btn btn-primary">インポート</button>
+      </div>
+      <div class="import-result" id="import-result"></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

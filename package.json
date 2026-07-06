@@ -1,0 +1,15 @@
+{
+  "name": "onboarding-flow",
+  "version": "1.0.0",
+  "description": "正社員採用確定から入社・労務手続き完了までの業務プロセスを一気通貫で管理する社内ツール",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node scripts/seed.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

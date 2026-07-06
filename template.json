@@ -1,0 +1,242 @@
+{
+  "phases": [
+    {
+      "id": "contract",
+      "name": "① 契約締結",
+      "description": "内定通知から雇用契約の締結完了まで"
+    },
+    {
+      "id": "housing",
+      "name": "② 社宅",
+      "description": "社宅利用有無の確認と、利用する場合の手配"
+    },
+    {
+      "id": "info",
+      "name": "③ 基礎情報回収",
+      "description": "入社手続きに必要な本人情報・書類の回収"
+    },
+    {
+      "id": "accounts",
+      "name": "④ 入社手続き（アカウント・備品）",
+      "description": "マネーフォワード等の各種アカウント発行と備品手配"
+    },
+    {
+      "id": "labor",
+      "name": "⑤ 労務手続き",
+      "description": "社会保険・雇用保険・税関連の入社後手続き"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "contract-offer-letter",
+      "phaseId": "contract",
+      "title": "内定通知書（オファーレター）の送付",
+      "assignee": "人事",
+      "offsetDays": -30,
+      "description": "HERPで採用確定になったら、条件面を確定して内定通知書を送付する。"
+    },
+    {
+      "id": "contract-acceptance",
+      "phaseId": "contract",
+      "title": "内定承諾の受領・HERPステータス更新",
+      "assignee": "人事",
+      "offsetDays": -25,
+      "description": "内定承諾書を受領し、HERP上のステータスを「内定承諾」に更新する。"
+    },
+    {
+      "id": "contract-draft",
+      "phaseId": "contract",
+      "title": "雇用契約書・労働条件通知書の作成",
+      "assignee": "人事",
+      "offsetDays": -21,
+      "description": "オファー条件（給与・等級・入社日）を反映して契約書類を作成する。"
+    },
+    {
+      "id": "contract-send",
+      "phaseId": "contract",
+      "title": "電子契約の送信（クラウドサイン等）",
+      "assignee": "人事",
+      "offsetDays": -18,
+      "description": "電子契約サービスで本人へ契約書類を送信する。"
+    },
+    {
+      "id": "contract-signed",
+      "phaseId": "contract",
+      "title": "契約締結完了の確認・保管",
+      "assignee": "人事",
+      "offsetDays": -14,
+      "description": "本人の締結完了を確認し、締結済み書類を所定フォルダに保管する。"
+    },
+    {
+      "id": "housing-check",
+      "phaseId": "housing",
+      "title": "社宅利用希望の確認",
+      "assignee": "人事",
+      "offsetDays": -21,
+      "description": "社宅制度の案内を送付し、利用有無の回答を得る。回答を得たら本人情報の「社宅利用」を更新する。"
+    },
+    {
+      "id": "housing-property",
+      "phaseId": "housing",
+      "title": "社宅物件の選定・賃貸借契約",
+      "assignee": "人事",
+      "offsetDays": -14,
+      "condition": "housing",
+      "description": "本人の希望条件をもとに物件を選定し、法人契約を締結する。"
+    },
+    {
+      "id": "housing-agreement",
+      "phaseId": "housing",
+      "title": "社宅規程の説明・入居誓約書の回収",
+      "assignee": "人事",
+      "offsetDays": -7,
+      "condition": "housing",
+      "description": "社宅規程（自己負担額・退去条件等）を説明し、誓約書を回収する。"
+    },
+    {
+      "id": "housing-payroll",
+      "phaseId": "housing",
+      "title": "社宅家賃の給与控除設定",
+      "assignee": "労務",
+      "offsetDays": -3,
+      "condition": "housing",
+      "description": "自己負担分の給与控除をマネーフォワード給与に設定する。"
+    },
+    {
+      "id": "info-guide",
+      "phaseId": "info",
+      "title": "入社手続き案内の送付",
+      "assignee": "人事",
+      "offsetDays": -14,
+      "description": "入社日までに提出が必要な書類・情報の一覧を本人へ案内する。"
+    },
+    {
+      "id": "info-basic",
+      "phaseId": "info",
+      "title": "基礎情報の回収（住所・緊急連絡先・振込口座）",
+      "assignee": "本人",
+      "offsetDays": -10,
+      "description": "基礎情報フォームへの入力を依頼し、回収する。"
+    },
+    {
+      "id": "info-mynumber",
+      "phaseId": "info",
+      "title": "マイナンバーの回収",
+      "assignee": "本人",
+      "offsetDays": -7,
+      "description": "安全な方法（専用フォーム等）でマイナンバーを回収する。"
+    },
+    {
+      "id": "info-pension",
+      "phaseId": "info",
+      "title": "基礎年金番号・雇用保険被保険者番号の回収",
+      "assignee": "本人",
+      "offsetDays": -7,
+      "description": "年金手帳（基礎年金番号通知書）と雇用保険被保険者証の写しを回収する。"
+    },
+    {
+      "id": "info-gensen",
+      "phaseId": "info",
+      "title": "源泉徴収票の回収依頼（同年中に前職給与がある場合）",
+      "assignee": "本人",
+      "offsetDays": -5,
+      "description": "年末調整に必要。前職の源泉徴収票の提出を依頼する（入社後でも可だが早めに案内）。"
+    },
+    {
+      "id": "info-fuyou",
+      "phaseId": "info",
+      "title": "扶養控除等（異動）申告書の回収",
+      "assignee": "本人",
+      "offsetDays": -5,
+      "description": "扶養家族の有無に関わらず全員から回収する。"
+    },
+    {
+      "id": "info-health",
+      "phaseId": "info",
+      "title": "入社時健康診断書の回収",
+      "assignee": "本人",
+      "offsetDays": -3,
+      "description": "3ヶ月以内の健康診断書を回収する（未受診の場合は受診を手配）。"
+    },
+    {
+      "id": "accounts-mf",
+      "phaseId": "accounts",
+      "title": "マネーフォワード（給与・勤怠・経費）アカウント発行",
+      "assignee": "労務",
+      "offsetDays": -3,
+      "description": "マネーフォワード クラウド給与・勤怠・経費に従業員情報を登録し、招待を送信する。"
+    },
+    {
+      "id": "accounts-gws",
+      "phaseId": "accounts",
+      "title": "Google Workspace・Slack アカウント発行",
+      "assignee": "情シス",
+      "offsetDays": -3,
+      "description": "メールアドレスを発行し、Slack・その他社内ツールに招待する。"
+    },
+    {
+      "id": "accounts-pc",
+      "phaseId": "accounts",
+      "title": "PC・備品の手配",
+      "assignee": "情シス",
+      "offsetDays": -7,
+      "description": "PC・モニター等を発注し、キッティングを完了させる。"
+    },
+    {
+      "id": "accounts-key",
+      "phaseId": "accounts",
+      "title": "入館証・オフィス鍵の手配",
+      "assignee": "人事",
+      "offsetDays": -3,
+      "description": "入館証の発行を申請し、入社日に渡せる状態にする。"
+    },
+    {
+      "id": "labor-orientation",
+      "phaseId": "labor",
+      "title": "入社日オリエンテーションの実施",
+      "assignee": "人事",
+      "offsetDays": 0,
+      "description": "就業規則・評価制度・社内ルールの説明、入館証・PCの受け渡しを行う。"
+    },
+    {
+      "id": "labor-payroll-setup",
+      "phaseId": "labor",
+      "title": "給与計算の設定（給与・通勤手当・控除）",
+      "assignee": "労務",
+      "offsetDays": 3,
+      "description": "マネーフォワード給与に給与額・通勤手当・各種控除を設定する。"
+    },
+    {
+      "id": "labor-shakai-hoken",
+      "phaseId": "labor",
+      "title": "健康保険・厚生年金 資格取得届の提出",
+      "assignee": "労務",
+      "offsetDays": 5,
+      "description": "【法定期限：入社日から5日以内】年金事務所（または健保組合）へ提出する。"
+    },
+    {
+      "id": "labor-koyou-hoken",
+      "phaseId": "labor",
+      "title": "雇用保険 被保険者資格取得届の提出",
+      "assignee": "労務",
+      "offsetDays": 10,
+      "description": "【法定期限：入社月の翌月10日まで】ハローワークへ提出する。"
+    },
+    {
+      "id": "labor-juminzei",
+      "phaseId": "labor",
+      "title": "住民税の特別徴収切替手続き",
+      "assignee": "労務",
+      "offsetDays": 10,
+      "description": "本人の希望を確認し、市区町村へ特別徴収への切替届を提出する。"
+    },
+    {
+      "id": "labor-roudousha-meibo",
+      "phaseId": "labor",
+      "title": "労働者名簿・賃金台帳の整備",
+      "assignee": "労務",
+      "offsetDays": 5,
+      "description": "法定三帳簿（労働者名簿・賃金台帳・出勤簿）に新入社員の情報を反映する。"
+    }
+  ]
+}
