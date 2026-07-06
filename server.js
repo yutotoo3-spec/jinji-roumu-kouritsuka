@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   loadDb, saveDb, loadTemplate,
-  createEmployee, updateEmployee, updateTask, importHerpCsv, registerFromWebhook,
+  createEmployee, updateEmployee, updateTask, registerFromWebhook,
 } from './lib/store.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -100,20 +100,6 @@ async function handleApi(req, res, url) {
     if (errors) return sendJson(res, errors[0].includes('見つかり') ? 404 : 400, { errors });
     saveDb(db);
     return sendJson(res, 200, { employee });
-  }
-
-  // POST /api/import/herp  (body: { csv: "..." })
-  if (req.method === 'POST' && url.pathname === '/api/import/herp') {
-    const input = await readJsonBody(req);
-    if (!input.csv) return sendJson(res, 400, { errors: ['csv フィールドにCSVテキストを指定してください'] });
-    const result = importHerpCsv(db, template, input.csv);
-    if (result.errors) return sendJson(res, 400, { errors: result.errors });
-    saveDb(db);
-    return sendJson(res, 200, {
-      importedCount: result.imported.length,
-      imported: result.imported,
-      skipped: result.skipped,
-    });
   }
 
   // POST /api/webhook/herp — HERPの採用決定Webhookを受けて自動登録する

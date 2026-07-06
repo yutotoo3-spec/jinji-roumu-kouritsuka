@@ -121,7 +121,7 @@ async function renderDashboard() {
         <div class="empty-state">
           <div class="big">📋</div>
           <p>${active.length === 0
-            ? '入社者がまだ登録されていません。<br>右上の「＋ 入社者を登録」または「HERP CSVインポート」から追加してください。'
+            ? '入社者がまだ登録されていません。<br>右上の「＋ 入社者を登録」から追加するか、HERPのWebhook連携を設定してください。'
             : 'この条件に該当する入社者はいません。'}</p>
         </div>` : ''}
       ${list.map((e) => empCardHtml(e)).join('')}
@@ -320,17 +320,11 @@ function taskHtml(t, emp) {
 
 function setupDialogs() {
   const dlgAdd = document.getElementById('dialog-add');
-  const dlgImport = document.getElementById('dialog-import');
 
   document.getElementById('btn-add').addEventListener('click', () => {
     document.getElementById('form-add').reset();
     document.getElementById('add-error').textContent = '';
     dlgAdd.showModal();
-  });
-  document.getElementById('btn-import').addEventListener('click', () => {
-    document.getElementById('form-import').reset();
-    document.getElementById('import-result').innerHTML = '';
-    dlgImport.showModal();
   });
   document.querySelectorAll('[data-close]').forEach((btn) => {
     btn.addEventListener('click', () => btn.closest('dialog').close());
@@ -348,30 +342,6 @@ function setupDialogs() {
       route();
     } catch (err) {
       document.getElementById('add-error').textContent = err.message;
-    }
-  });
-
-  document.getElementById('form-import').addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    const fileInput = document.getElementById('import-file');
-    const textInput = document.getElementById('import-text');
-    const resultEl = document.getElementById('import-result');
-    let csv = textInput.value.trim();
-    if (fileInput.files[0]) csv = await fileInput.files[0].text();
-    if (!csv) {
-      resultEl.innerHTML = '<p class="form-error">CSVファイルを選択するか、CSVテキストを貼り付けてください。</p>';
-      return;
-    }
-    try {
-      const result = await api('/api/import/herp', { method: 'POST', body: JSON.stringify({ csv }) });
-      resultEl.innerHTML = `
-        <p class="ok">✅ ${result.importedCount}名をインポートしました。</p>
-        ${result.skipped.length ? `<p>スキップ ${result.skipped.length}件：</p>
-          <ul>${result.skipped.map((s) => `<li>${s.line}行目：${esc(s.reason)}</li>`).join('')}</ul>` : ''}
-      `;
-      if (result.importedCount > 0) renderDashboard();
-    } catch (err) {
-      resultEl.innerHTML = `<p class="form-error">${esc(err.message)}</p>`;
     }
   });
 }

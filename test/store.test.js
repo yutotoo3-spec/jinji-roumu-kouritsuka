@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   loadTemplate, createEmployee, updateEmployee, updateTask,
-  importHerpCsv, registerFromWebhook, isTaskApplicable, progressOf, addDays, parseCsv,
+  registerFromWebhook, isTaskApplicable, progressOf, addDays,
 } from '../lib/store.js';
 
 const template = loadTemplate();
@@ -89,39 +89,6 @@ test('updateTask: 完了・未完了の切り替えと completedAt の管理', (
 
   assert.ok(updateTask(db, employee.id, task.id, { status: 'invalid' }).errors);
   assert.ok(updateTask(db, 'nope', task.id, { status: 'done' }).errors);
-});
-
-test('parseCsv: 引用符・改行入りフィールドを解釈する', () => {
-  const rows = parseCsv('a,b,c\n"x,y","line1\nline2",z\r\n1,2,3\n');
-  assert.deepEqual(rows, [['a', 'b', 'c'], ['x,y', 'line1\nline2', 'z'], ['1', '2', '3']]);
-});
-
-test('importHerpCsv: HERP形式のヘッダーを取り込み、重複・不正行はスキップする', () => {
-  const db = emptyDb();
-  const csv = [
-    '氏名,メールアドレス,応募ポジション,部署,入社予定日',
-    '山田 太郎,taro@example.com,エンジニア,開発部,2026/8/1',
-    '佐藤 花子,hanako@example.com,セールス,営業部,2026-08-15',
-    ',missing@example.com,PM,開発部,2026-08-01',
-    '田中 実,minoru@example.com,デザイナー,開発部,来月',
-  ].join('\n');
-
-  const result = importHerpCsv(db, template, csv);
-  assert.equal(result.imported.length, 2);
-  assert.equal(result.skipped.length, 2);
-  assert.equal(db.employees[0].joinDate, '2026-08-01'); // 2026/8/1 を正規化
-  assert.equal(db.employees[0].source, 'herp-csv');
-
-  // 同じメールアドレスは重複としてスキップ
-  const again = importHerpCsv(db, template, csv);
-  assert.equal(again.imported.length, 0);
-  assert.equal(db.employees.length, 2);
-});
-
-test('importHerpCsv: 必須列がないCSVはエラー', () => {
-  const db = emptyDb();
-  const result = importHerpCsv(db, template, '名字,メール\n山田,a@example.com');
-  assert.ok(result.errors);
 });
 
 test('registerFromWebhook: 英語キーのフラットなペイロードを登録できる', () => {
