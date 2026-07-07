@@ -314,9 +314,6 @@ dialog input, dialog select, dialog textarea {
 .req { color: var(--danger); font-size: 10px; margin-left: 4px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 .form-error { color: var(--danger); font-size: 12px; margin: 8px 0 0; }
-.import-result { font-size: 12px; margin-top: 10px; }
-.import-result ul { margin: 4px 0; padding-left: 18px; color: var(--text-sub); }
-.import-result .ok { color: var(--ok); font-weight: 700; }
 
 /* ---- トースト ---- */
 .toast {
