@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入社手続き 本人ページ</title>
+  <style>
+    :root {
+      --bg: #f4f5f8; --surface: #fff; --border: #e1e4eb;
+      --text: #1e2430; --text-sub: #6a7181;
+      --primary: #2563eb; --primary-soft: #e9f0fe;
+      --danger: #dc2626; --danger-bg: #fdeeee;
+      --warn: #b45309; --warn-bg: #fdf5e2;
+      --ok: #15803d; --ok-bg: #e9f7ee;
+      --muted-bg: #eef0f4;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #131720; --surface: #1b212e; --border: #2c3547;
+        --text: #e7eaf1; --text-sub: #96a0b5;
+        --primary: #6d97f7; --primary-soft: #23304d;
+        --danger: #f28b8b; --danger-bg: #3c2226;
+        --warn: #e5b567; --warn-bg: #3a2f1c;
+        --ok: #7fd49a; --ok-bg: #1d3427;
+        --muted-bg: #262e3e;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+      font-size: 15px; line-height: 1.7;
+    }
+    main { max-width: 640px; margin: 0 auto; padding: 20px 16px 64px; }
+    .hero {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; margin-bottom: 16px;
+    }
+    .hero h1 { margin: 0 0 4px; font-size: 20px; }
+    .hero .sub { color: var(--text-sub); font-size: 13px; }
+    .hero .dday { margin-top: 8px; font-weight: 700; color: var(--primary); }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; margin-bottom: 16px; overflow: hidden;
+    }
+    .card-head { padding: 14px 18px; border-bottom: 1px solid var(--border); background: none; }
+    .card-head h2 { margin: 0; font-size: 15px; }
+    .card-head p { margin: 4px 0 0; font-size: 12px; color: var(--text-sub); }
+    .item { display: flex; gap: 12px; align-items: flex-start; padding: 13px 18px; border-bottom: 1px solid var(--border); }
+    .item:last-child { border-bottom: none; }
+    .item input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--ok); flex-shrink: 0; }
+    .item-title { font-weight: 600; }
+    .item.done .item-title { text-decoration: line-through; color: var(--text-sub); font-weight: 400; }
+    .item-desc { font-size: 12px; color: var(--text-sub); }
+    .due { font-size: 12px; color: var(--text-sub); white-space: nowrap; }
+    .due.overdue { color: var(--danger); font-weight: 700; }
+    .due.soon { color: var(--warn); font-weight: 700; }
+    .badge-done { color: var(--ok); font-size: 12px; font-weight: 700; white-space: nowrap; }
+    form { padding: 16px 18px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+    input[type="text"], input[type="tel"], textarea {
+      display: block; width: 100%; margin-top: 4px;
+      border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+      font-size: 15px; font-family: inherit; background: var(--surface); color: var(--text);
+    }
+    .btn {
+      width: 100%; border: none; border-radius: 8px; padding: 12px;
+      background: var(--primary); color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+    }
+    .submitted { padding: 12px 18px; background: var(--ok-bg); color: var(--ok); font-size: 13px; font-weight: 600; }
+    .privacy {
+      margin: 0; padding: 10px 18px 16px; font-size: 12px; color: var(--text-sub);
+    }
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--text); color: var(--bg); border-radius: 8px;
+      padding: 10px 18px; font-size: 13px; z-index: 10; max-width: calc(100vw - 32px);
+    }
+    .error-page { text-align: center; padding: 60px 20px; color: var(--text-sub); }
+    footer { text-align: center; font-size: 11px; color: var(--text-sub); margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <main id="app"><div class="error-page">読み込んでいます…</div></main>
+  <div id="toast" class="toast" hidden></div>
+
+  <script>
+    'use strict';
+    const token = location.pathname.split('/').filter(Boolean)[1];
+    const $app = document.getElementById('app');
+
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg; el.hidden = false;
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => { el.hidden = true; }, 2600);
+    }
+    function todayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+    function daysUntil(dateStr) {
+      return Math.round((new Date(dateStr + 'T00:00:00') - new Date(todayStr() + 'T00:00:00')) / 86400000);
+    }
+    function fmtDate(dateStr) {
+      const [y, m, d] = dateStr.split('-');
+      return `${y}年${Number(m)}月${Number(d)}日`;
+    }
+
+    async function api(path, options = {}) {
+      const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...options });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((body.errors || ['通信エラーが発生しました']).join('\n'));
+      return body;
+    }
+
+    function render(view) {
+      const d = daysUntil(view.joinDate);
+      const ddayText = d > 0 ? `${view.joinDateLabel}まで あと${d}日` : (d === 0 ? `本日が${view.joinDateLabel}です！` : 'ようこそ！');
+      const remaining = view.tasks.filter((t) => t.status !== 'done').length;
+      const info = view.basicInfo;
+
+      $app.innerHTML = `
+        <div class="hero">
+          <h1>${esc(view.name)} さんの手続きページ</h1>
+          <div class="sub">${esc(view.joinDateLabel)}: ${fmtDate(view.joinDate)}（${esc(view.employmentTypeName)}）</div>
+          <div class="dday">${esc(ddayText)}</div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>ご提出をお願いしているもの ${remaining ? `（残り${remaining}件）` : '（すべて完了 🎉）'}</h2>
+            <p>ご対応いただけたらチェックを入れてください。担当者に自動で共有されます。</p>
+          </div>
+          ${view.tasks.map((t) => {
+            const days = daysUntil(t.dueDate);
+            let due = `<span class="due">期日 ${fmtDate(t.dueDate)}</span>`;
+            if (t.status === 'done') due = '<span class="badge-done">完了 ✓</span>';
+            else if (days < 0) due = `<span class="due overdue">期日を${-days}日過ぎています</span>`;
+            else if (days <= 3) due = `<span class="due soon">期日まであと${days}日</span>`;
+            return `
+              <div class="item ${t.status === 'done' ? 'done' : ''}">
+                <input type="checkbox" data-task="${t.id}" ${t.status === 'done' ? 'checked' : ''} aria-label="${esc(t.title)}">
+                <div style="flex:1; min-width:0">
+                  <div class="item-title">${esc(t.title)}</div>
+                  <div class="item-desc">${esc(t.description)}</div>
+                </div>
+                ${due}
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>基礎情報の提出</h2>
+            <p>送信すると担当者に届き、該当のタスクは自動で完了になります。あとから修正して再送信もできます。</p>
+          </div>
+          ${info.submittedAt ? `<div class="submitted">✓ ${new Date(info.submittedAt).toLocaleString('ja-JP')} に提出済みです。修正がある場合は再送信してください。</div>` : ''}
+          <form id="form-info">
+            <label>現住所
+              <input type="text" name="address" value="${esc(info.address)}" placeholder="〒100-0001 東京都千代田区…">
+            </label>
+            <label>電話番号（緊急連絡先）
+              <input type="tel" name="phone" value="${esc(info.phone)}" placeholder="090-1234-5678">
+            </label>
+            <label>給与（報酬）振込口座
+              <textarea name="bankAccount" rows="2" placeholder="◯◯銀行 ◯◯支店 普通 1234567 ヤマダ タロウ">${esc(info.bankAccount)}</textarea>
+            </label>
+            <button type="submit" class="btn">${info.submittedAt ? '修正して再送信' : '送信する'}</button>
+          </form>
+          <p class="privacy">🔒 マイナンバーはこのページには入力しないでください。別途、担当者から専用の提出方法をご案内します。</p>
+        </div>
+
+        <footer>このページのURLはあなた専用です。他の方と共有しないでください。<br>不明点は人事担当までお気軽にご連絡ください。</footer>
+      `;
+
+      $app.querySelectorAll('[data-task]').forEach((cb) => {
+        cb.addEventListener('change', async () => {
+          try {
+            const view2 = await api(`/api/portal/${token}/tasks/${cb.dataset.task}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ status: cb.checked ? 'done' : 'todo' }),
+            });
+            toast(cb.checked ? '完了として担当者に共有しました' : '未完了に戻しました');
+            render(view2);
+          } catch (err) {
+            toast(err.message);
+            cb.checked = !cb.checked;
+          }
+        });
+      });
+
+      document.getElementById('form-info').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const data = Object.fromEntries(new FormData(ev.target).entries());
+        try {
+          const view2 = await api(`/api/portal/${token}/basic-info`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+          });
+          toast('送信しました。ありがとうございます！');
+          render(view2);
+        } catch (err) {
+          toast(err.message);
+        }
+      });
+    }
+
+    (async function init() {
+      try {
+        render(await api(`/api/portal/${token}`));
+      } catch (err) {
+        $app.innerHTML = `<div class="error-page">ページが見つかりませんでした。<br>お手数ですが、案内メールに記載のリンクをもう一度ご確認ください。</div>`;
+      }
+    })();
+  </script>
+</body>
+</html>
