@@ -13,7 +13,7 @@
       <span>入社手続き管理</span>
     </a>
     <div class="header-actions">
-      <button class="btn btn-primary" id="btn-add">＋ 入社者を登録</button>
+      <button class="btn btn-primary" id="btn-add">＋ 新規登録</button>
     </div>
   </header>
 
@@ -22,8 +22,8 @@
   <!-- 入社者登録モーダル -->
   <dialog id="dialog-add">
     <form id="form-add" method="dialog">
-      <h2>入社者を登録</h2>
-      <p class="dialog-note">登録すると、契約締結〜労務手続きまでの標準タスクが入社日から逆算した期日付きで自動生成されます。</p>
+      <h2>入社者・業務委託の登録</h2>
+      <p class="dialog-note">登録すると、雇用区分に応じた標準タスクが入社日（稼働開始日）から逆算した期日付きで自動生成されます。</p>
       <label>氏名 <span class="req">必須</span>
         <input name="name" required placeholder="山田 太郎">
       </label>
@@ -34,6 +34,14 @@
         <input name="herpUrl" type="url" placeholder="https://agent.herp.cloud/... （HERPの候補者詳細ページ）">
       </label>
       <div class="form-row">
+        <label>雇用区分 <span class="req">必須</span>
+          <select name="employmentType"></select>
+        </label>
+        <label><span id="add-joindate-label">入社日</span> <span class="req">必須</span>
+          <input name="joinDate" type="date" required>
+        </label>
+      </div>
+      <div class="form-row">
         <label>ポジション
           <input name="position" placeholder="ソフトウェアエンジニア">
         </label>
@@ -42,10 +50,7 @@
         </label>
       </div>
       <div class="form-row">
-        <label>入社日 <span class="req">必須</span>
-          <input name="joinDate" type="date" required>
-        </label>
-        <label>社宅利用
+        <label id="add-housing-field">社宅利用
           <select name="housingUse">
             <option value="未確認">未確認</option>
             <option value="利用する">利用する</option>

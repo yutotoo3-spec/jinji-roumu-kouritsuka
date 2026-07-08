@@ -1,242 +1,427 @@
 {
-  "phases": [
+  "employmentTypes": [
     {
-      "id": "contract",
-      "name": "① 契約締結",
-      "description": "内定通知から雇用契約の締結完了まで"
+      "id": "fulltime",
+      "name": "正社員",
+      "joinDateLabel": "入社日",
+      "phases": [
+        {
+          "id": "contract",
+          "name": "① 契約締結",
+          "description": "内定通知から雇用契約の締結完了まで"
+        },
+        {
+          "id": "housing",
+          "name": "② 社宅",
+          "description": "社宅利用有無の確認と、利用する場合の手配"
+        },
+        {
+          "id": "info",
+          "name": "③ 基礎情報回収",
+          "description": "入社手続きに必要な本人情報・書類の回収"
+        },
+        {
+          "id": "accounts",
+          "name": "④ 入社手続き（アカウント・備品）",
+          "description": "マネーフォワード等の各種アカウント発行と備品手配"
+        },
+        {
+          "id": "labor",
+          "name": "⑤ 労務手続き",
+          "description": "社会保険・雇用保険・税関連の入社後手続き"
+        },
+        {
+          "id": "followup",
+          "name": "⑥ 入社後フォロー",
+          "description": "定着支援と試用期間の評価"
+        }
+      ],
+      "tasks": [
+        {
+          "id": "contract-offer-letter",
+          "phaseId": "contract",
+          "title": "内定通知書（オファーレター）の送付",
+          "assignee": "人事",
+          "offsetDays": -30,
+          "description": "HERPで採用確定になったら、条件面を確定して内定通知書を送付する。"
+        },
+        {
+          "id": "contract-acceptance",
+          "phaseId": "contract",
+          "title": "内定承諾の受領・HERPステータス更新",
+          "assignee": "人事",
+          "offsetDays": -25,
+          "description": "内定承諾書を受領し、HERP上のステータスを「内定承諾」に更新する。"
+        },
+        {
+          "id": "contract-draft",
+          "phaseId": "contract",
+          "title": "雇用契約書・労働条件通知書の作成",
+          "assignee": "人事",
+          "offsetDays": -21,
+          "description": "オファー条件（給与・等級・入社日）を反映して契約書類を作成する。"
+        },
+        {
+          "id": "contract-send",
+          "phaseId": "contract",
+          "title": "電子契約の送信（クラウドサイン等）",
+          "assignee": "人事",
+          "offsetDays": -18,
+          "description": "電子契約サービスで本人へ契約書類を送信する。"
+        },
+        {
+          "id": "contract-signed",
+          "phaseId": "contract",
+          "title": "契約締結完了の確認・保管",
+          "assignee": "人事",
+          "offsetDays": -14,
+          "description": "本人の締結完了を確認し、締結済み書類を所定フォルダに保管する。"
+        },
+        {
+          "id": "housing-check",
+          "phaseId": "housing",
+          "title": "社宅利用希望の確認",
+          "assignee": "人事",
+          "offsetDays": -21,
+          "description": "社宅制度の案内を送付し、利用有無の回答を得る。回答を得たら本人情報の「社宅利用」を更新する。"
+        },
+        {
+          "id": "housing-property",
+          "phaseId": "housing",
+          "title": "社宅物件の選定・賃貸借契約",
+          "assignee": "人事",
+          "offsetDays": -14,
+          "condition": "housing",
+          "description": "本人の希望条件をもとに物件を選定し、法人契約を締結する。"
+        },
+        {
+          "id": "housing-agreement",
+          "phaseId": "housing",
+          "title": "社宅規程の説明・入居誓約書の回収",
+          "assignee": "人事",
+          "offsetDays": -7,
+          "condition": "housing",
+          "description": "社宅規程（自己負担額・退去条件等）を説明し、誓約書を回収する。"
+        },
+        {
+          "id": "housing-payroll",
+          "phaseId": "housing",
+          "title": "社宅家賃の給与控除設定",
+          "assignee": "労務",
+          "offsetDays": -3,
+          "condition": "housing",
+          "description": "自己負担分の給与控除をマネーフォワード給与に設定する。"
+        },
+        {
+          "id": "info-guide",
+          "phaseId": "info",
+          "title": "入社手続き案内の送付",
+          "assignee": "人事",
+          "offsetDays": -14,
+          "description": "入社日までに提出が必要な書類・情報の一覧を本人へ案内する（本人ページのURLを添える）。"
+        },
+        {
+          "id": "info-basic",
+          "phaseId": "info",
+          "title": "基礎情報の回収（住所・緊急連絡先・振込口座）",
+          "assignee": "本人",
+          "offsetDays": -10,
+          "description": "本人ページの基礎情報フォームから提出してもらう。"
+        },
+        {
+          "id": "info-mynumber",
+          "phaseId": "info",
+          "title": "マイナンバーの提出",
+          "assignee": "本人",
+          "offsetDays": -7,
+          "description": "安全な方法（マイナンバー収集の専用サービス等）で提出してもらう。本人ページには入力しない。"
+        },
+        {
+          "id": "info-pension",
+          "phaseId": "info",
+          "title": "基礎年金番号・雇用保険被保険者番号の提出",
+          "assignee": "本人",
+          "offsetDays": -7,
+          "description": "年金手帳（基礎年金番号通知書）と雇用保険被保険者証の写しを提出してもらう。"
+        },
+        {
+          "id": "info-gensen",
+          "phaseId": "info",
+          "title": "源泉徴収票の提出（同年中に前職給与がある場合）",
+          "assignee": "本人",
+          "offsetDays": -5,
+          "description": "年末調整に必要。前職の源泉徴収票を提出してもらう（入社後でも可だが早めに案内）。"
+        },
+        {
+          "id": "info-fuyou",
+          "phaseId": "info",
+          "title": "扶養控除等（異動）申告書の提出",
+          "assignee": "本人",
+          "offsetDays": -5,
+          "description": "扶養家族の有無に関わらず全員から回収する。"
+        },
+        {
+          "id": "info-health",
+          "phaseId": "info",
+          "title": "入社時健康診断書の提出",
+          "assignee": "本人",
+          "offsetDays": -3,
+          "description": "3ヶ月以内の健康診断書を提出してもらう（未受診の場合は受診を手配）。"
+        },
+        {
+          "id": "accounts-mf",
+          "phaseId": "accounts",
+          "title": "マネーフォワード（給与・勤怠・経費）アカウント発行",
+          "assignee": "労務",
+          "offsetDays": -3,
+          "description": "マネーフォワード クラウド給与・勤怠・経費に従業員情報を登録し、招待を送信する。"
+        },
+        {
+          "id": "accounts-gws",
+          "phaseId": "accounts",
+          "title": "Google Workspace・Slack アカウント発行",
+          "assignee": "情シス",
+          "offsetDays": -3,
+          "description": "メールアドレスを発行し、Slack・その他社内ツールに招待する。"
+        },
+        {
+          "id": "accounts-pc",
+          "phaseId": "accounts",
+          "title": "PC・備品の手配",
+          "assignee": "情シス",
+          "offsetDays": -7,
+          "description": "PC・モニター等を発注し、キッティングを完了させる。"
+        },
+        {
+          "id": "accounts-key",
+          "phaseId": "accounts",
+          "title": "入館証・オフィス鍵の手配",
+          "assignee": "人事",
+          "offsetDays": -3,
+          "description": "入館証の発行を申請し、入社日に渡せる状態にする。"
+        },
+        {
+          "id": "labor-orientation",
+          "phaseId": "labor",
+          "title": "入社日オリエンテーションの実施",
+          "assignee": "人事",
+          "offsetDays": 0,
+          "description": "就業規則・評価制度・社内ルールの説明、入館証・PCの受け渡しを行う。"
+        },
+        {
+          "id": "labor-payroll-setup",
+          "phaseId": "labor",
+          "title": "給与計算の設定（給与・通勤手当・控除）",
+          "assignee": "労務",
+          "offsetDays": 3,
+          "description": "マネーフォワード給与に給与額・通勤手当・各種控除を設定する。"
+        },
+        {
+          "id": "labor-shakai-hoken",
+          "phaseId": "labor",
+          "title": "健康保険・厚生年金 資格取得届の提出",
+          "assignee": "労務",
+          "offsetDays": 5,
+          "description": "【法定期限：入社日から5日以内】年金事務所（または健保組合）へ提出する。"
+        },
+        {
+          "id": "labor-koyou-hoken",
+          "phaseId": "labor",
+          "title": "雇用保険 被保険者資格取得届の提出",
+          "assignee": "労務",
+          "offsetDays": 10,
+          "description": "【法定期限：入社月の翌月10日まで】ハローワークへ提出する。"
+        },
+        {
+          "id": "labor-juminzei",
+          "phaseId": "labor",
+          "title": "住民税の特別徴収切替手続き",
+          "assignee": "労務",
+          "offsetDays": 10,
+          "description": "本人の希望を確認し、市区町村へ特別徴収への切替届を提出する。"
+        },
+        {
+          "id": "labor-roudousha-meibo",
+          "phaseId": "labor",
+          "title": "労働者名簿・賃金台帳の整備",
+          "assignee": "労務",
+          "offsetDays": 5,
+          "description": "法定三帳簿（労働者名簿・賃金台帳・出勤簿）に新入社員の情報を反映する。"
+        },
+        {
+          "id": "followup-30",
+          "phaseId": "followup",
+          "title": "入社30日面談の実施",
+          "assignee": "人事",
+          "offsetDays": 30,
+          "description": "立ち上がり状況・困りごとをヒアリングし、受け入れ側の改善につなげる。"
+        },
+        {
+          "id": "followup-60",
+          "phaseId": "followup",
+          "title": "入社60日面談の実施",
+          "assignee": "人事",
+          "offsetDays": 60,
+          "description": "目標に対する進捗と職場への適応状況を確認する。"
+        },
+        {
+          "id": "followup-eval",
+          "phaseId": "followup",
+          "title": "試用期間評価・本採用の判断",
+          "assignee": "人事",
+          "offsetDays": 75,
+          "description": "【試用期間3ヶ月の場合】満了2週間前までに評価を確定し、本人にフィードバックする。"
+        },
+        {
+          "id": "followup-90",
+          "phaseId": "followup",
+          "title": "入社90日振り返り・オンボーディング完了確認",
+          "assignee": "人事",
+          "offsetDays": 90,
+          "description": "オンボーディング全体を振り返り、改善点をテンプレートに反映する。"
+        }
+      ]
     },
     {
-      "id": "housing",
-      "name": "② 社宅",
-      "description": "社宅利用有無の確認と、利用する場合の手配"
-    },
-    {
-      "id": "info",
-      "name": "③ 基礎情報回収",
-      "description": "入社手続きに必要な本人情報・書類の回収"
-    },
-    {
-      "id": "accounts",
-      "name": "④ 入社手続き（アカウント・備品）",
-      "description": "マネーフォワード等の各種アカウント発行と備品手配"
-    },
-    {
-      "id": "labor",
-      "name": "⑤ 労務手続き",
-      "description": "社会保険・雇用保険・税関連の入社後手続き"
-    }
-  ],
-  "tasks": [
-    {
-      "id": "contract-offer-letter",
-      "phaseId": "contract",
-      "title": "内定通知書（オファーレター）の送付",
-      "assignee": "人事",
-      "offsetDays": -30,
-      "description": "HERPで採用確定になったら、条件面を確定して内定通知書を送付する。"
-    },
-    {
-      "id": "contract-acceptance",
-      "phaseId": "contract",
-      "title": "内定承諾の受領・HERPステータス更新",
-      "assignee": "人事",
-      "offsetDays": -25,
-      "description": "内定承諾書を受領し、HERP上のステータスを「内定承諾」に更新する。"
-    },
-    {
-      "id": "contract-draft",
-      "phaseId": "contract",
-      "title": "雇用契約書・労働条件通知書の作成",
-      "assignee": "人事",
-      "offsetDays": -21,
-      "description": "オファー条件（給与・等級・入社日）を反映して契約書類を作成する。"
-    },
-    {
-      "id": "contract-send",
-      "phaseId": "contract",
-      "title": "電子契約の送信（クラウドサイン等）",
-      "assignee": "人事",
-      "offsetDays": -18,
-      "description": "電子契約サービスで本人へ契約書類を送信する。"
-    },
-    {
-      "id": "contract-signed",
-      "phaseId": "contract",
-      "title": "契約締結完了の確認・保管",
-      "assignee": "人事",
-      "offsetDays": -14,
-      "description": "本人の締結完了を確認し、締結済み書類を所定フォルダに保管する。"
-    },
-    {
-      "id": "housing-check",
-      "phaseId": "housing",
-      "title": "社宅利用希望の確認",
-      "assignee": "人事",
-      "offsetDays": -21,
-      "description": "社宅制度の案内を送付し、利用有無の回答を得る。回答を得たら本人情報の「社宅利用」を更新する。"
-    },
-    {
-      "id": "housing-property",
-      "phaseId": "housing",
-      "title": "社宅物件の選定・賃貸借契約",
-      "assignee": "人事",
-      "offsetDays": -14,
-      "condition": "housing",
-      "description": "本人の希望条件をもとに物件を選定し、法人契約を締結する。"
-    },
-    {
-      "id": "housing-agreement",
-      "phaseId": "housing",
-      "title": "社宅規程の説明・入居誓約書の回収",
-      "assignee": "人事",
-      "offsetDays": -7,
-      "condition": "housing",
-      "description": "社宅規程（自己負担額・退去条件等）を説明し、誓約書を回収する。"
-    },
-    {
-      "id": "housing-payroll",
-      "phaseId": "housing",
-      "title": "社宅家賃の給与控除設定",
-      "assignee": "労務",
-      "offsetDays": -3,
-      "condition": "housing",
-      "description": "自己負担分の給与控除をマネーフォワード給与に設定する。"
-    },
-    {
-      "id": "info-guide",
-      "phaseId": "info",
-      "title": "入社手続き案内の送付",
-      "assignee": "人事",
-      "offsetDays": -14,
-      "description": "入社日までに提出が必要な書類・情報の一覧を本人へ案内する。"
-    },
-    {
-      "id": "info-basic",
-      "phaseId": "info",
-      "title": "基礎情報の回収（住所・緊急連絡先・振込口座）",
-      "assignee": "本人",
-      "offsetDays": -10,
-      "description": "基礎情報フォームへの入力を依頼し、回収する。"
-    },
-    {
-      "id": "info-mynumber",
-      "phaseId": "info",
-      "title": "マイナンバーの回収",
-      "assignee": "本人",
-      "offsetDays": -7,
-      "description": "安全な方法（専用フォーム等）でマイナンバーを回収する。"
-    },
-    {
-      "id": "info-pension",
-      "phaseId": "info",
-      "title": "基礎年金番号・雇用保険被保険者番号の回収",
-      "assignee": "本人",
-      "offsetDays": -7,
-      "description": "年金手帳（基礎年金番号通知書）と雇用保険被保険者証の写しを回収する。"
-    },
-    {
-      "id": "info-gensen",
-      "phaseId": "info",
-      "title": "源泉徴収票の回収依頼（同年中に前職給与がある場合）",
-      "assignee": "本人",
-      "offsetDays": -5,
-      "description": "年末調整に必要。前職の源泉徴収票の提出を依頼する（入社後でも可だが早めに案内）。"
-    },
-    {
-      "id": "info-fuyou",
-      "phaseId": "info",
-      "title": "扶養控除等（異動）申告書の回収",
-      "assignee": "本人",
-      "offsetDays": -5,
-      "description": "扶養家族の有無に関わらず全員から回収する。"
-    },
-    {
-      "id": "info-health",
-      "phaseId": "info",
-      "title": "入社時健康診断書の回収",
-      "assignee": "本人",
-      "offsetDays": -3,
-      "description": "3ヶ月以内の健康診断書を回収する（未受診の場合は受診を手配）。"
-    },
-    {
-      "id": "accounts-mf",
-      "phaseId": "accounts",
-      "title": "マネーフォワード（給与・勤怠・経費）アカウント発行",
-      "assignee": "労務",
-      "offsetDays": -3,
-      "description": "マネーフォワード クラウド給与・勤怠・経費に従業員情報を登録し、招待を送信する。"
-    },
-    {
-      "id": "accounts-gws",
-      "phaseId": "accounts",
-      "title": "Google Workspace・Slack アカウント発行",
-      "assignee": "情シス",
-      "offsetDays": -3,
-      "description": "メールアドレスを発行し、Slack・その他社内ツールに招待する。"
-    },
-    {
-      "id": "accounts-pc",
-      "phaseId": "accounts",
-      "title": "PC・備品の手配",
-      "assignee": "情シス",
-      "offsetDays": -7,
-      "description": "PC・モニター等を発注し、キッティングを完了させる。"
-    },
-    {
-      "id": "accounts-key",
-      "phaseId": "accounts",
-      "title": "入館証・オフィス鍵の手配",
-      "assignee": "人事",
-      "offsetDays": -3,
-      "description": "入館証の発行を申請し、入社日に渡せる状態にする。"
-    },
-    {
-      "id": "labor-orientation",
-      "phaseId": "labor",
-      "title": "入社日オリエンテーションの実施",
-      "assignee": "人事",
-      "offsetDays": 0,
-      "description": "就業規則・評価制度・社内ルールの説明、入館証・PCの受け渡しを行う。"
-    },
-    {
-      "id": "labor-payroll-setup",
-      "phaseId": "labor",
-      "title": "給与計算の設定（給与・通勤手当・控除）",
-      "assignee": "労務",
-      "offsetDays": 3,
-      "description": "マネーフォワード給与に給与額・通勤手当・各種控除を設定する。"
-    },
-    {
-      "id": "labor-shakai-hoken",
-      "phaseId": "labor",
-      "title": "健康保険・厚生年金 資格取得届の提出",
-      "assignee": "労務",
-      "offsetDays": 5,
-      "description": "【法定期限：入社日から5日以内】年金事務所（または健保組合）へ提出する。"
-    },
-    {
-      "id": "labor-koyou-hoken",
-      "phaseId": "labor",
-      "title": "雇用保険 被保険者資格取得届の提出",
-      "assignee": "労務",
-      "offsetDays": 10,
-      "description": "【法定期限：入社月の翌月10日まで】ハローワークへ提出する。"
-    },
-    {
-      "id": "labor-juminzei",
-      "phaseId": "labor",
-      "title": "住民税の特別徴収切替手続き",
-      "assignee": "労務",
-      "offsetDays": 10,
-      "description": "本人の希望を確認し、市区町村へ特別徴収への切替届を提出する。"
-    },
-    {
-      "id": "labor-roudousha-meibo",
-      "phaseId": "labor",
-      "title": "労働者名簿・賃金台帳の整備",
-      "assignee": "労務",
-      "offsetDays": 5,
-      "description": "法定三帳簿（労働者名簿・賃金台帳・出勤簿）に新入社員の情報を反映する。"
+      "id": "contractor",
+      "name": "業務委託",
+      "joinDateLabel": "稼働開始日",
+      "phases": [
+        {
+          "id": "c-contract",
+          "name": "① 契約締結",
+          "description": "契約条件の確定から業務委託契約の締結完了まで"
+        },
+        {
+          "id": "c-payment",
+          "name": "② 支払設定",
+          "description": "請求・支払いに必要な情報の確認と登録"
+        },
+        {
+          "id": "c-onboard",
+          "name": "③ 受け入れ準備",
+          "description": "アカウント発行と稼働開始の準備"
+        },
+        {
+          "id": "c-manage",
+          "name": "④ 契約管理",
+          "description": "稼働後の振り返りと契約更新・終了の管理"
+        }
+      ],
+      "tasks": [
+        {
+          "id": "c-scope",
+          "phaseId": "c-contract",
+          "title": "業務内容・成果物・単価・契約期間の確定",
+          "assignee": "人事",
+          "offsetDays": -18,
+          "description": "依頼部門と業務範囲・稼働時間・単価・契約期間を確定する。"
+        },
+        {
+          "id": "c-compliance",
+          "phaseId": "c-contract",
+          "title": "反社チェック・与信確認",
+          "assignee": "人事",
+          "offsetDays": -16,
+          "description": "個人・法人を問わず実施する。法人の場合は登記情報も確認する。"
+        },
+        {
+          "id": "c-draft",
+          "phaseId": "c-contract",
+          "title": "業務委託契約書・NDAの作成",
+          "assignee": "人事",
+          "offsetDays": -14,
+          "description": "指揮命令関係の記載に注意し、偽装請負にならない内容にする。"
+        },
+        {
+          "id": "c-send",
+          "phaseId": "c-contract",
+          "title": "電子契約の送信（クラウドサイン等）",
+          "assignee": "人事",
+          "offsetDays": -10,
+          "description": "電子契約サービスで契約書類を送信する。"
+        },
+        {
+          "id": "c-signed",
+          "phaseId": "c-contract",
+          "title": "契約締結完了の確認・保管",
+          "assignee": "人事",
+          "offsetDays": -7,
+          "description": "締結完了を確認し、締結済み書類を所定フォルダに保管する。"
+        },
+        {
+          "id": "c-invoice",
+          "phaseId": "c-payment",
+          "title": "インボイス登録番号・請求方法の提出",
+          "assignee": "本人",
+          "offsetDays": -7,
+          "description": "適格請求書発行事業者の登録番号を提出してもらう（未登録の場合の消費税の扱いも合意する）。"
+        },
+        {
+          "id": "c-bank",
+          "phaseId": "c-payment",
+          "title": "振込口座・請求先情報の提出",
+          "assignee": "本人",
+          "offsetDays": -5,
+          "description": "本人ページの基礎情報フォームから提出してもらう。締め日・支払サイトも併せて案内する。"
+        },
+        {
+          "id": "c-mf",
+          "phaseId": "c-payment",
+          "title": "マネーフォワードへの支払先登録",
+          "assignee": "労務",
+          "offsetDays": -3,
+          "description": "クラウド債務支払・会計に支払先と支払条件を登録する。"
+        },
+        {
+          "id": "c-security",
+          "phaseId": "c-onboard",
+          "title": "秘密保持・セキュリティ誓約書の提出",
+          "assignee": "本人",
+          "offsetDays": -5,
+          "description": "情報の取り扱いルールを説明し、誓約書を提出してもらう。"
+        },
+        {
+          "id": "c-accounts",
+          "phaseId": "c-onboard",
+          "title": "アカウント発行（必要最小限の権限）",
+          "assignee": "情シス",
+          "offsetDays": -3,
+          "description": "契約範囲に必要なツールのみ発行する。終了時の棚卸しのため発行一覧を記録する。"
+        },
+        {
+          "id": "c-kickoff",
+          "phaseId": "c-onboard",
+          "title": "キックオフ・稼働開始",
+          "assignee": "人事",
+          "offsetDays": 0,
+          "description": "依頼部門との顔合わせ、コミュニケーションルール・定例の設定を行う。"
+        },
+        {
+          "id": "c-review30",
+          "phaseId": "c-manage",
+          "title": "稼働30日の振り返り",
+          "assignee": "人事",
+          "offsetDays": 30,
+          "description": "依頼部門と本人の双方に、稼働状況・コミュニケーションの課題をヒアリングする。"
+        },
+        {
+          "id": "c-renewal",
+          "phaseId": "c-manage",
+          "title": "契約更新・終了の判断",
+          "assignee": "人事",
+          "offsetDays": 60,
+          "description": "【契約期間に合わせて期日を調整】満了1ヶ月前までに更新条件または終了を確定し、本人に伝える。"
+        },
+        {
+          "id": "c-offboard",
+          "phaseId": "c-manage",
+          "title": "終了時のオフボーディング準備（権限棚卸し）",
+          "assignee": "情シス",
+          "offsetDays": 75,
+          "description": "更新しない場合、アカウント停止・貸与物回収・成果物の引き継ぎを計画する。更新する場合はこのタスクを完了にしてよい。"
+        }
+      ]
     }
   ]
 }

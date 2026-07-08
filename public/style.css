@@ -87,6 +87,7 @@ main { max-width: 1040px; margin: 0 auto; padding: 24px 20px 64px; }
 }
 .summary-card .label { color: var(--text-sub); font-size: 12px; }
 .summary-card .value { font-size: 26px; font-weight: 700; margin-top: 2px; }
+.summary-card .unit { font-size: 13px; color: var(--text-sub); font-weight: 500; }
 .summary-card.alert .value { color: var(--danger); }
 .summary-card.warn .value { color: var(--warn); }
 
@@ -95,9 +96,22 @@ main { max-width: 1040px; margin: 0 auto; padding: 24px 20px 64px; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
   margin: 8px 0 12px;
 }
 .section-head h2 { font-size: 15px; margin: 0; }
+.section-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.section-tools select {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text);
+}
+.btn-sm { padding: 5px 10px; font-size: 12px; }
 .filter-tabs { display: flex; gap: 4px; }
 .filter-tabs button {
   border: 1px solid var(--border);
@@ -154,6 +168,9 @@ main { max-width: 1040px; margin: 0 auto; padding: 24px 20px 64px; }
 .badge-done { background: var(--ok-bg); color: var(--ok); }
 .badge-soon { background: var(--warn-bg); color: var(--warn); }
 .badge-assignee { background: var(--muted-bg); color: var(--text-sub); font-weight: 500; }
+.badge-type-ft { background: var(--muted-bg); color: var(--text-sub); }
+.badge-type-ct { background: #f3e8ff; color: #7c3aed; }
+.emp-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 
 .progress-wrap { display: flex; align-items: center; gap: 10px; }
 .progress-bar {
@@ -228,6 +245,61 @@ main { max-width: 1040px; margin: 0 auto; padding: 24px 20px 64px; }
   font-size: 12px;
   background: var(--warn-bg);
   color: var(--warn);
+}
+
+/* ---- ツールボックス（本人ページ・メール生成） ---- */
+.tool-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+}
+.tool-box-head h3 { margin: 0 0 2px; font-size: 14px; }
+.tool-box-head p { margin: 0 0 10px; font-size: 12px; color: var(--text-sub); }
+.portal-row, .mail-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.portal-row input {
+  flex: 1;
+  min-width: 220px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  background: var(--muted-bg);
+  color: var(--text-sub);
+}
+.portal-note { font-size: 12px; color: var(--text-sub); margin: 10px 0 0; }
+.basic-info-view { margin-top: 12px; font-size: 12px; }
+.basic-info-view table { border-collapse: collapse; margin-top: 6px; width: 100%; }
+.basic-info-view th, .basic-info-view td {
+  border: 1px solid var(--border);
+  padding: 5px 10px;
+  text-align: left;
+  font-weight: 400;
+}
+.basic-info-view th { background: var(--muted-bg); white-space: nowrap; width: 90px; }
+.mail-row select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text);
+}
+#mail-body {
+  width: 100%;
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 12px;
+  font-family: inherit;
+  background: var(--muted-bg);
+  color: var(--text);
+  resize: vertical;
 }
 
 /* ---- フェーズ・タスク ---- */
