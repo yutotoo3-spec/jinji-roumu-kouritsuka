@@ -201,7 +201,7 @@ async function renderDetail(id) {
       <div class="detail-header-top">
         <div>
           <h1 class="detail-name">${esc(emp.name)}</h1>
-          <div class="emp-meta">${esc(emp.email || '')}</div>
+          <div class="emp-meta">${esc(emp.email || '')}${/^https?:\/\//.test(emp.herpUrl || '') ? `${emp.email ? ' ・ ' : ''}<a class="herp-link" href="${esc(emp.herpUrl)}" target="_blank" rel="noopener">HERPで開く ↗</a>` : ''}</div>
         </div>
         <button class="btn btn-danger-ghost" id="btn-delete">削除</button>
       </div>
@@ -214,6 +214,7 @@ async function renderDetail(id) {
             ${['未確認', '利用する', '利用しない'].map((v) => `<option ${emp.housingUse === v ? 'selected' : ''}>${v}</option>`).join('')}
           </select>
         </div>
+        <div class="detail-field"><label>HERP候補者URL（任意）</label><input type="url" data-field="herpUrl" value="${esc(emp.herpUrl || '')}" placeholder="https://agent.herp.cloud/..."></div>
       </div>
       ${emp.housingUse === '未確認' ? `<div class="housing-hint">⚠ 社宅利用の有無が未確認です。確認して更新すると、社宅関連タスクの要否が自動で切り替わります。</div>` : ''}
       <div class="detail-progress progress-wrap">

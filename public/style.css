@@ -312,6 +312,9 @@ dialog input, dialog select, dialog textarea {
 }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .req { color: var(--danger); font-size: 10px; margin-left: 4px; }
+.opt { color: var(--text-sub); font-size: 10px; margin-left: 4px; font-weight: 400; }
+.herp-link { color: var(--primary); text-decoration: none; font-size: 12px; font-weight: 600; }
+.herp-link:hover { text-decoration: underline; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 .form-error { color: var(--danger); font-size: 12px; margin: 8px 0 0; }
 
