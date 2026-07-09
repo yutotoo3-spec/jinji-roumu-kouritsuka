@@ -1,6 +1,7 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import {
   loadDb, saveDb, loadTemplates,
@@ -46,6 +47,58 @@ async function readJsonBody(req) {
   const raw = await readBody(req);
   if (!raw) return {};
   return JSON.parse(raw);
+}
+
+// ---- Basic認証（インターネット公開用） ----
+// BASIC_AUTH_USER / BASIC_AUTH_PASSWORD を設定すると人事向け画面とAPIに認証がかかる。
+// 次のパスは認証の対象外:
+//   /portal/*, /api/portal/* … 本人ページ（トークンURLを知る本人がアクセスする）
+//   /api/webhook/herp        … HERPからのWebhook（HERP_WEBHOOK_TOKEN で保護）
+//   /healthz                 … ホスティングのヘルスチェック用
+
+const AUTH_USER = process.env.BASIC_AUTH_USER || '';
+const AUTH_PASS = process.env.BASIC_AUTH_PASSWORD || '';
+const AUTH_ENABLED = Boolean(AUTH_USER && AUTH_PASS);
+
+function isAuthExempt(pathname) {
+  return (
+    pathname === '/healthz' ||
+    pathname === '/api/webhook/herp' ||
+    pathname.startsWith('/portal/') ||
+    pathname.startsWith('/api/portal/')
+  );
+}
+
+function timingSafeEqual(a, b) {
+  const ba = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  if (ba.length !== bb.length) {
+    crypto.timingSafeEqual(bb, bb);
+    return false;
+  }
+  return crypto.timingSafeEqual(ba, bb);
+}
+
+function checkBasicAuth(req) {
+  const header = req.headers.authorization || '';
+  if (!header.startsWith('Basic ')) return false;
+  const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8');
+  const idx = decoded.indexOf(':');
+  if (idx < 0) return false;
+  const userOk = timingSafeEqual(decoded.slice(0, idx), AUTH_USER);
+  const passOk = timingSafeEqual(decoded.slice(idx + 1), AUTH_PASS);
+  return userOk && passOk;
+}
+
+function requireAuth(req, res, pathname) {
+  if (!AUTH_ENABLED || isAuthExempt(pathname)) return true;
+  if (checkBasicAuth(req)) return true;
+  res.writeHead(401, {
+    'WWW-Authenticate': 'Basic realm="onboarding", charset="UTF-8"',
+    'Content-Type': 'application/json; charset=utf-8',
+  });
+  res.end(JSON.stringify({ errors: ['認証が必要です'] }));
+  return false;
 }
 
 // ---- Slack通知 ----
@@ -245,6 +298,10 @@ function serveStatic(res, url) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
+    if (url.pathname === '/healthz') {
+      return sendJson(res, 200, { ok: true });
+    }
+    if (!requireAuth(req, res, url.pathname)) return;
     if (url.pathname.startsWith('/api/')) {
       await handleApi(req, res, url);
     } else {
@@ -258,6 +315,11 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`入社手続き管理ツール: http://localhost:${PORT}`);
+  if (AUTH_ENABLED) {
+    console.log('Basic認証: 有効（本人ページ・Webhook・/healthz は認証対象外）');
+  } else {
+    console.log('Basic認証: 無効。インターネットに公開する場合は BASIC_AUTH_USER / BASIC_AUTH_PASSWORD を設定してください');
+  }
   if (process.env.SLACK_WEBHOOK_URL) {
     console.log(`Slackデイリー通知: 毎日${DIGEST_HOUR}時台に送信します`);
   } else {

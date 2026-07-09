@@ -1,0 +1,25 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Render ダッシュボード → New → Blueprint でこのリポジトリを選ぶと、この構成で作成されます。
+services:
+  - type: web
+    name: onboarding-flow
+    runtime: node
+    plan: starter # 永続ディスクには有料プランが必要（Freeはディスク不可＝再起動でデータが消える）
+    buildCommand: "echo no build step"
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    disk:
+      name: onboarding-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATA_DIR
+        value: /data
+      - key: BASIC_AUTH_USER
+        sync: false # ダッシュボードで設定（人事画面のログインID）
+      - key: BASIC_AUTH_PASSWORD
+        sync: false # ダッシュボードで設定（人事画面のパスワード）
+      - key: HERP_WEBHOOK_TOKEN
+        generateValue: true # 自動生成。HERP側のWebhook URLの ?token= に使う
+      - key: SLACK_WEBHOOK_URL
+        sync: false # 任意。SlackのIncoming Webhook URL
