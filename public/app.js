@@ -74,6 +74,13 @@ function taskStats(emp) {
   return { total: applicable.length, done, overdue, dueSoon };
 }
 
+// リマインド対象: 本人担当の未対応タスクのうち、期限超過または期日3日以内のもの
+function reminderTasks(emp) {
+  return emp.tasks
+    .filter((t) => t.assignee === '本人' && t.status !== 'done' && isApplicable(t, emp) && daysUntil(t.dueDate) <= 3)
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+}
+
 function typeBadge(emp) {
   const tpl = tplOf(emp);
   const cls = tpl.id === 'contractor' ? 'badge-type-ct' : 'badge-type-ft';
@@ -110,15 +117,19 @@ async function renderDashboard() {
   const upcoming = active.filter((e) => daysUntil(e.joinDate) >= 0).length;
   const housingUnknown = active.filter((e) => isFulltime(e) && e.housingUse === '未確認').length;
 
+  const needRemind = active.filter((e) => reminderTasks(e).length > 0).length;
+
   const filters = [
     ['active', 'すべて'],
     ['upcoming', '受け入れ前'],
+    ['remind', '要リマインド'],
     ['overdue', '期限超過あり'],
     ['completed', '手続き完了'],
   ];
 
   let list = active;
   if (currentFilter === 'upcoming') list = list.filter((e) => daysUntil(e.joinDate) >= 0);
+  if (currentFilter === 'remind') list = list.filter((e) => reminderTasks(e).length > 0);
   if (currentFilter === 'overdue') list = list.filter((e) => taskStats(e).overdue > 0);
   if (currentFilter === 'completed') list = list.filter((e) => { const s = taskStats(e); return s.done === s.total; });
   if (currentTypeFilter !== 'all') list = list.filter((e) => (e.employmentType || 'fulltime') === currentTypeFilter);
@@ -131,6 +142,7 @@ async function renderDashboard() {
       <div class="summary-card ${totalOverdue ? 'alert' : ''}"><div class="label">期限超過タスク</div><div class="value">${totalOverdue}<span class="unit"> 件</span></div></div>
       <div class="summary-card ${totalDueSoon ? 'warn' : ''}"><div class="label">3日以内に期日</div><div class="value">${totalDueSoon}<span class="unit"> 件</span></div></div>
       <div class="summary-card ${housingUnknown ? 'warn' : ''}"><div class="label">社宅利用が未確認</div><div class="value">${housingUnknown}<span class="unit"> 名</span></div></div>
+      <div class="summary-card ${needRemind ? 'warn' : ''}"><div class="label">本人対応待ち（要リマインド）</div><div class="value">${needRemind}<span class="unit"> 名</span></div></div>
     </div>
 
     <div class="section-head">
@@ -170,6 +182,16 @@ async function renderDashboard() {
     renderDashboard();
   });
   document.getElementById('btn-export-mf').addEventListener('click', () => exportMfCsv(active));
+
+  // ワンクリックリマインド（カード内ボタン。カードのリンク遷移は止める）
+  $app.querySelectorAll('[data-remind]').forEach((btn) => {
+    btn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const emp = active.find((e) => e.id === btn.dataset.remind);
+      if (emp) openReminderMail(emp);
+    });
+  });
 }
 
 function empCardHtml(e) {
@@ -177,6 +199,7 @@ function empCardHtml(e) {
   const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
   const complete = s.done === s.total;
   const joinLabel = tplOf(e).joinDateLabel;
+  const remind = reminderTasks(e);
   return `
     <a class="emp-card" href="#/emp/${e.id}">
       <div>
@@ -196,6 +219,7 @@ function empCardHtml(e) {
         ${s.overdue ? `<span class="badge badge-overdue">期限超過 ${s.overdue}件</span>` : ''}
         ${!s.overdue && s.dueSoon ? `<span class="badge badge-soon">期日間近 ${s.dueSoon}件</span>` : ''}
         ${!s.overdue && !s.dueSoon && complete ? `<span class="badge badge-done">完了</span>` : ''}
+        ${remind.length ? `<button class="btn btn-secondary btn-sm btn-remind" data-remind="${e.id}" title="${e.email ? `未対応${remind.length}件のリマインドメールをメールアプリで開く` : 'メールアドレスが未登録です。詳細画面から登録してください'}" ${e.email ? '' : 'disabled'}>✉ リマインド（${remind.length}件）</button>` : ''}
       </div>
     </a>
   `;
@@ -238,6 +262,46 @@ function pendingSelfTasks(emp) {
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 }
 
+// リマインド用: 期日の状況を添えた項目リスト
+function reminderItemLines(tasks) {
+  return tasks.map((t) => {
+    const days = daysUntil(t.dueDate);
+    let status;
+    if (days < 0) status = `期日を${-days}日過ぎています`;
+    else if (days === 0) status = '本日が期日です';
+    else status = `期日まであと${days}日`;
+    return `・${t.title}（${fmtDateJa(t.dueDate)}まで／${status}）`;
+  }).join('\n');
+}
+
+function mailtoUrl(emp, mail) {
+  return `mailto:${encodeURIComponent(emp.email)}?subject=${encodeURIComponent(mail.subject)}&body=${encodeURIComponent(mail.body)}`;
+}
+
+// カードの「✉ リマインド」から呼ぶ。未対応分だけのリマインドをメールアプリで開く
+function openReminderMail(emp) {
+  const mail = buildReminderMail(emp);
+  if (!mail) { toast('リマインド対象のタスクはありません'); return; }
+  if (!emp.email) { toast('メールアドレスが未登録です。詳細画面から登録してください'); return; }
+  window.location.href = mailtoUrl(emp, mail);
+  toast(`${emp.name} さんへのリマインドをメールアプリで開きました`);
+}
+
+function buildReminderMail(emp) {
+  const targets = reminderTasks(emp);
+  const tasks = targets.length ? targets : pendingSelfTasks(emp);
+  if (tasks.length === 0) return null;
+  const tpl = tplOf(emp);
+  const dateWord = tpl.id === 'fulltime' ? '入社日' : '稼働開始日';
+  const signature = '\n──────────\n[会社名] 人事担当\n[担当者名] / [連絡先]';
+  const portal = `▼あなた専用の手続きページ（提出状況の確認・基礎情報の提出ができます）\n${portalUrl(emp)}`;
+  return {
+    name: '未対応分のリマインド',
+    subject: `【リマインド】ご提出物のお願い（${emp.name}様）`,
+    body: `${emp.name} 様\n\nお世話になっております。[会社名] 人事担当です。\n${dateWord}（${fmtDateJa(emp.joinDate)}）に向けてご対応をお願いしている項目のうち、以下がまだ確認できておりません。お手数ですがご対応をお願いいたします。\n\n${reminderItemLines(tasks)}\n\n${portal}\n\nすでにご対応済みでしたら行き違いご容赦ください。\nご不明点やご事情があれば、お気軽にご返信ください。${signature}`,
+  };
+}
+
 function mailTemplates(emp) {
   const tpl = tplOf(emp);
   const joinLabel = tpl.joinDateLabel;
@@ -263,12 +327,8 @@ function mailTemplates(emp) {
         body: `${emp.name} 様\n\n当社には社宅制度があります。ご利用を希望される場合は物件の手配を進めますので、【${fmtDateJa(addDaysStr(emp.joinDate, -14))}まで】に利用希望の有無をご返信ください。\n\n・自己負担額や入居条件の詳細は、添付の社宅規程をご確認ください\n・ご希望のエリア・間取りがあれば併せてお知らせください${signature}`,
       });
     }
-    list.push({
-      id: 'remind',
-      name: '提出書類のリマインド',
-      subject: '【リマインド】入社書類のご提出のお願い',
-      body: `${emp.name} 様\n\n入社日が近づいてまいりました。以下の書類・情報がまだご提出いただけていないようですので、ご確認をお願いいたします。\n\n${items || '（未提出の項目はありません）'}\n\n${portal}\n\nすでにご対応済みでしたら行き違いご容赦ください。${signature}`,
-    });
+    const remind = buildReminderMail(emp);
+    if (remind) list.push(remind);
   } else {
     list.push({
       id: 'c-guide',
@@ -276,12 +336,8 @@ function mailTemplates(emp) {
       subject: `【${fmtDateJa(emp.joinDate)}稼働開始】ご契約手続きのご案内`,
       body: `${emp.name} 様\n\nこの度は業務をお受けいただきありがとうございます。\n稼働開始日（${fmtDateJa(emp.joinDate)}）に向けて、以下のご対応をお願いいたします。\n\n${items || '（現在ご対応いただく項目はありません）'}\n\n${portal}\n\n請求書の締め日・お支払サイトなどの条件は契約書に記載しております。\nご不明な点があれば、お気軽にご連絡ください。${signature}`,
     });
-    list.push({
-      id: 'c-remind',
-      name: '提出物のリマインド',
-      subject: '【リマインド】ご提出物のお願い',
-      body: `${emp.name} 様\n\n稼働開始日が近づいてまいりました。以下がまだご提出いただけていないようですので、ご確認をお願いいたします。\n\n${items || '（未提出の項目はありません）'}\n\n${portal}\n\nすでにご対応済みでしたら行き違いご容赦ください。${signature}`,
-    });
+    const remind = buildReminderMail(emp);
+    if (remind) list.push(remind);
   }
   return list;
 }
@@ -407,6 +463,7 @@ async function renderDetail(id) {
         <select id="mail-select">
           ${mails.map((m, i) => `<option value="${i}">${esc(m.name)}</option>`).join('')}
         </select>
+        <button class="btn btn-primary btn-sm" id="btn-open-mail" ${emp.email ? '' : 'disabled'} title="${emp.email ? '宛先・件名・本文入りでメールアプリを開く' : 'メールアドレスが未登録のため使えません'}">✉ メールアプリで開く</button>
         <button class="btn btn-secondary btn-sm" id="btn-copy-mail">本文をコピー</button>
         <button class="btn btn-secondary btn-sm" id="btn-copy-subject">件名をコピー</button>
       </div>
@@ -480,6 +537,10 @@ async function renderDetail(id) {
   });
   document.getElementById('btn-copy-subject').addEventListener('click', async () => {
     toast(await copyText(mails[Number(mailSelect.value)].subject) ? '件名をコピーしました' : 'コピーできませんでした');
+  });
+  document.getElementById('btn-open-mail').addEventListener('click', () => {
+    window.location.href = mailtoUrl(emp, mails[Number(mailSelect.value)]);
+    toast('メールアプリで開きました');
   });
 
   document.getElementById('btn-delete').addEventListener('click', async () => {
