@@ -39,7 +39,8 @@ npm test
 | 変数 | 用途 |
 |---|---|
 | `PORT` | ポート番号（既定: 3000） |
-| `DATA_DIR` | データ保存先（既定: `./data`） |
+| `DATA_DIR` | ファイル保存時のデータ保存先（既定: `./data`） |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | 両方設定するとデータを Upstash Redis（無料枠あり）に保存。**永続ディスクのない無料ホスティングで必須** |
 | `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` | 両方設定すると人事画面・APIにBasic認証がかかる。**インターネット公開時は必須**。本人ページ（`/portal/*`）とWebhookは認証対象外のまま動きます |
 | `HERP_WEBHOOK_TOKEN` | Webhookの認証トークン（設定を推奨） |
 | `SLACK_WEBHOOK_URL` | SlackのIncoming Webhook URL。設定すると毎朝ダイジェストを自動送信 |
@@ -49,27 +50,55 @@ npm test
 
 チーム利用・HERP Webhook・本人ページ・Slack通知を実際に動かすには、サーバーの公開が必要です。`Dockerfile`・`render.yaml`（Render用）・`railway.json`（Railway用）を同梱しています。
 
-### Render の場合（Blueprint対応・推奨）
+### 無料構成（月0円）: Render Free + Upstash Redis Free
+
+Render の無料プランは永続ディスクが使えないため、データ保存に Upstash Redis の無料枠を組み合わせます。
+
+**手順1: Upstash（データ保存先・無料）**
+
+1. https://upstash.com にサインアップ（GitHubアカウントでOK）
+2. **Create Database** → リージョンは Japan/Tokyo（近いもの）を選択 → 作成
+3. データベース詳細画面の **REST API** セクションにある `UPSTASH_REDIS_REST_URL` と `UPSTASH_REDIS_REST_TOKEN` を控える
+
+**手順2: Render（ホスティング・無料）**
 
 1. https://render.com にサインアップし、GitHubアカウントを連携
 2. ダッシュボード → **New → Blueprint** → このリポジトリを選択（`render.yaml` が自動で読み込まれます）
-3. 環境変数の入力を求められたら `BASIC_AUTH_USER`（ログインID）と `BASIC_AUTH_PASSWORD`（パスワード）を設定
+3. 環境変数の入力を求められたら以下を設定:
+   - `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` — 人事画面のログインID・パスワード
+   - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — 手順1で控えた値
 4. 作成完了後、発行されたURL（`https://～.onrender.com`）を開き、Basic認証でログイン
 
-※ 永続ディスク（データ保存）には Starter プラン（月$7〜）が必要です。Freeプランはディスクが使えず、再起動でデータが消えます。
+**手順3: 毎朝のSlack通知（無料cronで起動）** ※Slack通知を使う場合のみ
 
-### Railway の場合
+Render Freeは15分アクセスがないとスリープするため、アプリ内蔵のスケジューラは当てになりません。無料の外部cronから毎朝叩きます。
+
+1. Slackで Incoming Webhook を作成し、URLを Render の環境変数 `SLACK_WEBHOOK_URL` に設定
+2. https://cron-job.org （無料）にサインアップし、ジョブを作成:
+   - URL: `https://<あなたのURL>/api/notify/slack?token=<HERP_WEBHOOK_TOKENの値>`（トークンはRenderの環境変数画面で確認）
+   - Request method: **POST**、スケジュール: 毎日 9:00 など
+
+**無料構成の注意点**
+
+- 15分アクセスがないとスリープし、次に開くとき（本人ページ含む）**起動に1分ほど**かかります
+- Upstash無料枠は256MB・50万コマンド/月で、このツールの用途（数十〜数百名分のJSON）には十分です
+
+### 有料構成（月$7〜）: Render Starter
+
+スリープなし・外部サービス不要にしたい場合は、`render.yaml` のコメントに従って `plan: starter` + 永続ディスクに切り替えてください（Upstash・外部cron不要になります）。
+
+### Railway の場合（月$5〜）
 
 1. https://railway.app にサインアップし、**New Project → Deploy from GitHub repo** でこのリポジトリを選択
 2. サービスの **Settings → Volumes** でボリュームを追加し、Mount Path を `/data` にする
-3. **Variables** で `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` / `HERP_WEBHOOK_TOKEN` を設定
+3. **Variables** で `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` / `HERP_WEBHOOK_TOKEN` / `DATA_DIR=/data` を設定
 4. **Settings → Networking → Generate Domain** で公開URLを発行
 
 ### デプロイ後にやること
 
 1. 発行されたURLにアクセスし、Basic認証で入れることを確認
 2. **HERP連携**: HERPのWebhook設定に `https://<あなたのURL>/api/webhook/herp?token=<HERP_WEBHOOK_TOKENの値>` を登録
-3. **Slack通知**: Slackで Incoming Webhook を作成し、そのURLを環境変数 `SLACK_WEBHOOK_URL` に設定 → `POST /api/notify/slack` でテスト送信できます
+3. **Slack通知のテスト**: `curl -X POST "https://<あなたのURL>/api/notify/slack?token=<トークン>"` で即時送信して確認
 4. 本人ページのURL（詳細画面からコピー）が `https://` の公開URLになっていることを確認して案内メールに使う
 
 ## 業務フロー（テンプレート）
