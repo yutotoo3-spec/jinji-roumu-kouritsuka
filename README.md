@@ -40,9 +40,37 @@ npm test
 |---|---|
 | `PORT` | ポート番号（既定: 3000） |
 | `DATA_DIR` | データ保存先（既定: `./data`） |
+| `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` | 両方設定すると人事画面・APIにBasic認証がかかる。**インターネット公開時は必須**。本人ページ（`/portal/*`）とWebhookは認証対象外のまま動きます |
 | `HERP_WEBHOOK_TOKEN` | Webhookの認証トークン（設定を推奨） |
 | `SLACK_WEBHOOK_URL` | SlackのIncoming Webhook URL。設定すると毎朝ダイジェストを自動送信 |
 | `DIGEST_HOUR` | Slack通知を送る時刻（既定: 9） |
+
+## インターネットへの公開（デプロイ）
+
+チーム利用・HERP Webhook・本人ページ・Slack通知を実際に動かすには、サーバーの公開が必要です。`Dockerfile`・`render.yaml`（Render用）・`railway.json`（Railway用）を同梱しています。
+
+### Render の場合（Blueprint対応・推奨）
+
+1. https://render.com にサインアップし、GitHubアカウントを連携
+2. ダッシュボード → **New → Blueprint** → このリポジトリを選択（`render.yaml` が自動で読み込まれます）
+3. 環境変数の入力を求められたら `BASIC_AUTH_USER`（ログインID）と `BASIC_AUTH_PASSWORD`（パスワード）を設定
+4. 作成完了後、発行されたURL（`https://～.onrender.com`）を開き、Basic認証でログイン
+
+※ 永続ディスク（データ保存）には Starter プラン（月$7〜）が必要です。Freeプランはディスクが使えず、再起動でデータが消えます。
+
+### Railway の場合
+
+1. https://railway.app にサインアップし、**New Project → Deploy from GitHub repo** でこのリポジトリを選択
+2. サービスの **Settings → Volumes** でボリュームを追加し、Mount Path を `/data` にする
+3. **Variables** で `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` / `HERP_WEBHOOK_TOKEN` を設定
+4. **Settings → Networking → Generate Domain** で公開URLを発行
+
+### デプロイ後にやること
+
+1. 発行されたURLにアクセスし、Basic認証で入れることを確認
+2. **HERP連携**: HERPのWebhook設定に `https://<あなたのURL>/api/webhook/herp?token=<HERP_WEBHOOK_TOKENの値>` を登録
+3. **Slack通知**: Slackで Incoming Webhook を作成し、そのURLを環境変数 `SLACK_WEBHOOK_URL` に設定 → `POST /api/notify/slack` でテスト送信できます
+4. 本人ページのURL（詳細画面からコピー）が `https://` の公開URLになっていることを確認して案内メールに使う
 
 ## 業務フロー（テンプレート）
 
