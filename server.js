@@ -90,8 +90,15 @@ function checkBasicAuth(req) {
   return userOk && passOk;
 }
 
-function requireAuth(req, res, pathname) {
+function requireAuth(req, res, url) {
+  const pathname = url.pathname;
   if (!AUTH_ENABLED || isAuthExempt(pathname)) return true;
+  // 外部の無料cron（cron-job.org等）から毎朝のSlack通知を起動できるよう、
+  // /api/notify/slack は HERP_WEBHOOK_TOKEN と同じトークンでも認証を通す
+  if (pathname === '/api/notify/slack' && process.env.HERP_WEBHOOK_TOKEN) {
+    const got = url.searchParams.get('token') || req.headers['x-webhook-token'];
+    if (got && timingSafeEqual(got, process.env.HERP_WEBHOOK_TOKEN)) return true;
+  }
   if (checkBasicAuth(req)) return true;
   res.writeHead(401, {
     'WWW-Authenticate': 'Basic realm="onboarding", charset="UTF-8"',
@@ -114,7 +121,7 @@ function saveState(state) {
 async function sendSlackDigest({ force = false } = {}) {
   const url = process.env.SLACK_WEBHOOK_URL;
   if (!url) return { ok: false, reason: 'SLACK_WEBHOOK_URL が設定されていません' };
-  const digest = buildDigest(loadDb());
+  const digest = buildDigest(await loadDb());
   if (!digest.hasItems && !force) return { ok: true, skipped: true, reason: '通知対象がありません' };
   const res = await fetch(url, {
     method: 'POST',
@@ -152,7 +159,7 @@ function startDigestScheduler() {
 // ---- APIルーティング ----
 
 async function handleApi(req, res, url) {
-  const db = loadDb();
+  const db = await loadDb();
   const templates = loadTemplates();
   const parts = url.pathname.split('/').filter(Boolean); // ['api', ...]
 
@@ -171,7 +178,7 @@ async function handleApi(req, res, url) {
     const input = await readJsonBody(req);
     const { employee, errors } = createEmployee(db, templates, input);
     if (errors) return sendJson(res, 400, { errors });
-    saveDb(db);
+    await saveDb(db);
     return sendJson(res, 201, { employee });
   }
 
@@ -187,14 +194,14 @@ async function handleApi(req, res, url) {
       const patch = await readJsonBody(req);
       const { employee, errors } = updateEmployee(db, templates, id, patch);
       if (errors) return sendJson(res, errors[0].includes('見つかり') ? 404 : 400, { errors });
-      saveDb(db);
+      await saveDb(db);
       return sendJson(res, 200, { employee });
     }
     if (req.method === 'DELETE') {
       const idx = db.employees.findIndex((e) => e.id === id);
       if (idx < 0) return sendJson(res, 404, { errors: ['対象の従業員が見つかりません'] });
       db.employees.splice(idx, 1);
-      saveDb(db);
+      await saveDb(db);
       return sendJson(res, 200, { ok: true });
     }
   }
@@ -204,7 +211,7 @@ async function handleApi(req, res, url) {
     const patch = await readJsonBody(req);
     const { employee, errors } = updateTask(db, parts[2], parts[4], patch);
     if (errors) return sendJson(res, errors[0].includes('見つかり') ? 404 : 400, { errors });
-    saveDb(db);
+    await saveDb(db);
     return sendJson(res, 200, { employee });
   }
 
@@ -221,7 +228,7 @@ async function handleApi(req, res, url) {
     if (result.duplicate) {
       return sendJson(res, 200, { ok: true, duplicate: true, message: `既に登録済みです（${result.duplicate.name}）` });
     }
-    saveDb(db);
+    await saveDb(db);
     console.log(`[webhook] ${result.employee.name}（${result.employee.joinDate}）を自動登録しました`);
     return sendJson(res, 201, { ok: true, employee: result.employee });
   }
@@ -240,7 +247,7 @@ async function handleApi(req, res, url) {
     const input = await readJsonBody(req);
     const { errors } = submitBasicInfo(db, parts[2], input);
     if (errors) return sendJson(res, errors[0].includes('見つかり') ? 404 : 400, { errors });
-    saveDb(db);
+    await saveDb(db);
     const emp = findByPortalToken(db, parts[2]);
     return sendJson(res, 200, portalView(templates, emp));
   }
@@ -250,7 +257,7 @@ async function handleApi(req, res, url) {
     const patch = await readJsonBody(req);
     const { errors } = setPortalTaskStatus(db, parts[2], parts[4], patch.status);
     if (errors) return sendJson(res, errors[0].includes('見つかり') ? 404 : 400, { errors });
-    saveDb(db);
+    await saveDb(db);
     const emp = findByPortalToken(db, parts[2]);
     return sendJson(res, 200, portalView(templates, emp));
   }
@@ -301,7 +308,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/healthz') {
       return sendJson(res, 200, { ok: true });
     }
-    if (!requireAuth(req, res, url.pathname)) return;
+    if (!requireAuth(req, res, url)) return;
     if (url.pathname.startsWith('/api/')) {
       await handleApi(req, res, url);
     } else {

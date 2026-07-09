@@ -1,7 +1,7 @@
 // デモデータを投入するスクリプト。動作確認用: `npm run seed`
 import { loadDb, saveDb, loadTemplates, createEmployee, updateTask, submitBasicInfo, addDays, todayStr } from '../lib/store.js';
 
-const db = loadDb();
+const db = await loadDb();
 const templates = loadTemplates();
 
 if (db.employees.length > 0) {
@@ -75,5 +75,5 @@ if (first) {
   });
 }
 
-saveDb(db);
+await saveDb(db);
 console.log('デモデータの投入が完了しました。npm start でサーバーを起動してください。');

@@ -1,25 +1,38 @@
 # Render Blueprint: https://render.com/docs/blueprint-spec
 # Render ダッシュボード → New → Blueprint でこのリポジトリを選ぶと、この構成で作成されます。
+#
+# 【無料構成】plan: free ＋ Upstash Redis（無料枠）にデータ保存
+#   - Render Freeは永続ディスクが使えないため、データは Upstash Redis に保存します
+#     （UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN を設定。未設定だと
+#      ローカルファイル保存になり、再起動・再デプロイでデータが消えます）
+#   - 15分アクセスがないとスリープしますが、cron-job.org（無料）で10分おきに
+#     /healthz をGETし続ければ実質スリープなしで運用できます（README参照）
+#
+# 【有料構成】plan: starter（月$7〜）に変えて disk: を有効化すると、
+#   Upstash不要のディスク保存・スリープなしになります。
+#   disk:
+#     name: onboarding-data
+#     mountPath: /data
+#     sizeGB: 1
+#   envVars に DATA_DIR=/data を追加
 services:
   - type: web
     name: onboarding-flow
     runtime: node
-    plan: starter # 永続ディスクには有料プランが必要（Freeはディスク不可＝再起動でデータが消える）
+    plan: free
     buildCommand: "echo no build step"
     startCommand: node server.js
     healthCheckPath: /healthz
-    disk:
-      name: onboarding-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
-      - key: DATA_DIR
-        value: /data
       - key: BASIC_AUTH_USER
         sync: false # ダッシュボードで設定（人事画面のログインID）
       - key: BASIC_AUTH_PASSWORD
         sync: false # ダッシュボードで設定（人事画面のパスワード）
       - key: HERP_WEBHOOK_TOKEN
-        generateValue: true # 自動生成。HERP側のWebhook URLの ?token= に使う
+        generateValue: true # 自動生成。HERPのWebhook URLと外部cronの ?token= に使う
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false # UpstashのREST URL（無料構成で必須）
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false # UpstashのRESTトークン（無料構成で必須）
       - key: SLACK_WEBHOOK_URL
         sync: false # 任意。SlackのIncoming Webhook URL
