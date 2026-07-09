@@ -5,7 +5,8 @@
 #   - Render Freeは永続ディスクが使えないため、データは Upstash Redis に保存します
 #     （UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN を設定。未設定だと
 #      ローカルファイル保存になり、再起動・再デプロイでデータが消えます）
-#   - 15分アクセスがないとスリープし、次のアクセス時の起動に1分ほどかかります
+#   - 15分アクセスがないとスリープしますが、cron-job.org（無料）で10分おきに
+#     /healthz をGETし続ければ実質スリープなしで運用できます（README参照）
 #
 # 【有料構成】plan: starter（月$7〜）に変えて disk: を有効化すると、
 #   Upstash不要のディスク保存・スリープなしになります。
