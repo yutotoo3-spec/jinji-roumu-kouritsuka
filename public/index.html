@@ -13,6 +13,7 @@
       <span>入社手続き管理</span>
     </a>
     <div class="header-actions">
+      <button class="btn btn-secondary" id="btn-settings" title="通知などの設定">⚙ 設定</button>
       <button class="btn btn-primary" id="btn-add">＋ 新規登録</button>
     </div>
   </header>
@@ -64,6 +65,31 @@
       </div>
       <p class="form-error" id="add-error"></p>
     </form>
+  </dialog>
+
+  <!-- 設定モーダル -->
+  <dialog id="dialog-settings">
+    <div class="dialog-body">
+      <h2>⚙ 設定</h2>
+      <section class="settings-section">
+        <label class="toggle-row">
+          <input type="checkbox" id="setting-slack">
+          <span>
+            <strong>Slackデイリー通知</strong><br>
+            <small id="setting-slack-desc">毎朝、期限超過・本日期日・本人対応待ちなどをSlackに通知します。オフにすると通知は送られません。</small>
+          </span>
+        </label>
+        <p class="settings-status" id="slack-status"></p>
+        <div class="settings-actions">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-slack-test">テスト送信</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-slack-preview">通知内容をプレビュー</button>
+        </div>
+        <pre id="slack-preview" class="slack-preview" hidden></pre>
+      </section>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-primary" data-close>閉じる</button>
+      </div>
+    </div>
   </dialog>
 
   <div id="toast" class="toast" hidden></div>

@@ -609,6 +609,60 @@ function setupDialogs() {
     document.getElementById('add-joindate-label').textContent = tpl.joinDateLabel;
   }
 
+  // 設定モーダル
+  const dlgSettings = document.getElementById('dialog-settings');
+  document.getElementById('btn-settings').addEventListener('click', async () => {
+    try {
+      const { settings, slackConfigured, digestHour } = await api('/api/settings');
+      const cb = document.getElementById('setting-slack');
+      cb.checked = settings.slackEnabled;
+      document.getElementById('setting-slack-desc').textContent =
+        `毎朝${digestHour}時ごろ、期限超過・本日期日・本人対応待ちなどをSlackに通知します。オフにすると通知は送られません。`;
+      const status = document.getElementById('slack-status');
+      if (slackConfigured) {
+        status.textContent = '✓ Slack連携は設定済みです（SLACK_WEBHOOK_URL）';
+        status.className = 'settings-status ok';
+      } else {
+        status.textContent = '⚠ Slack連携が未設定です。環境変数 SLACK_WEBHOOK_URL を設定すると通知できるようになります';
+        status.className = 'settings-status warn';
+      }
+      document.getElementById('slack-preview').hidden = true;
+      dlgSettings.showModal();
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+  document.getElementById('setting-slack').addEventListener('change', async (ev) => {
+    try {
+      const { settings } = await api('/api/settings', {
+        method: 'PATCH',
+        body: JSON.stringify({ slackEnabled: ev.target.checked }),
+      });
+      toast(settings.slackEnabled ? 'Slack通知をオンにしました' : 'Slack通知をオフにしました');
+    } catch (err) {
+      toast(err.message);
+      ev.target.checked = !ev.target.checked;
+    }
+  });
+  document.getElementById('btn-slack-test').addEventListener('click', async () => {
+    try {
+      const result = await api('/api/notify/slack?test=1', { method: 'POST' });
+      toast(result.ok ? 'テスト送信しました。Slackを確認してください' : result.reason);
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+  document.getElementById('btn-slack-preview').addEventListener('click', async () => {
+    try {
+      const digest = await api('/api/notify/preview');
+      const pre = document.getElementById('slack-preview');
+      pre.textContent = digest.text;
+      pre.hidden = false;
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+
   document.getElementById('form-add').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const form = ev.target;
