@@ -7,7 +7,7 @@ import {
   loadDb, saveDb, loadTemplates,
   createEmployee, updateEmployee, updateTask, registerFromWebhook,
   findByPortalToken, portalView, submitBasicInfo, setPortalTaskStatus,
-  buildDigest, todayStr,
+  buildDigest, getSettings, updateSettings, todayStr,
 } from './lib/store.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -121,7 +121,11 @@ function saveState(state) {
 async function sendSlackDigest({ force = false } = {}) {
   const url = process.env.SLACK_WEBHOOK_URL;
   if (!url) return { ok: false, reason: 'SLACK_WEBHOOK_URL が設定されていません' };
-  const digest = buildDigest(await loadDb());
+  const db = await loadDb();
+  if (!getSettings(db).slackEnabled && !force) {
+    return { ok: true, skipped: true, reason: '設定でSlack通知がオフになっています' };
+  }
+  const digest = buildDigest(db);
   if (!digest.hasItems && !force) return { ok: true, skipped: true, reason: '通知対象がありません' };
   const res = await fetch(url, {
     method: 'POST',
@@ -262,10 +266,29 @@ async function handleApi(req, res, url) {
     return sendJson(res, 200, portalView(templates, emp));
   }
 
-  // POST /api/notify/slack — デイリーダイジェストを今すぐ送信（動作確認用）
+  // POST /api/notify/slack — デイリーダイジェストを送信
+  // 外部cronからの定期実行を想定（設定のオン/オフと通知対象の有無を尊重）。
+  // ?test=1 を付けると設定に関わらず強制送信（画面のテスト送信用）
   if (req.method === 'POST' && url.pathname === '/api/notify/slack') {
-    const result = await sendSlackDigest({ force: true });
+    const result = await sendSlackDigest({ force: url.searchParams.get('test') === '1' });
     return sendJson(res, result.ok ? 200 : 400, result);
+  }
+
+  // GET /api/settings — 設定と通知の構成状態
+  if (req.method === 'GET' && url.pathname === '/api/settings') {
+    return sendJson(res, 200, {
+      settings: getSettings(db),
+      slackConfigured: Boolean(process.env.SLACK_WEBHOOK_URL),
+      digestHour: DIGEST_HOUR,
+    });
+  }
+
+  // PATCH /api/settings — 設定の更新（slackEnabled）
+  if (req.method === 'PATCH' && url.pathname === '/api/settings') {
+    const patch = await readJsonBody(req);
+    const settings = updateSettings(db, patch);
+    await saveDb(db);
+    return sendJson(res, 200, { settings });
   }
 
   // GET /api/notify/preview — 通知内容のプレビュー（Slack未設定でも確認できる）

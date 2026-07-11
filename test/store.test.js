@@ -252,3 +252,17 @@ test('Slackダイジェスト: 対象がなければ hasItems=false', () => {
   const digest = buildDigest(emptyDb());
   assert.equal(digest.hasItems, false);
 });
+
+test('設定: 既定はSlack通知オン、更新が反映される', async () => {
+  const { getSettings, updateSettings } = await import('../lib/store.js');
+  const db = emptyDb();
+  assert.equal(getSettings(db).slackEnabled, true);
+  // 古いデータ（settingsなし）でも既定値が返る
+  assert.equal(getSettings({ employees: [] }).slackEnabled, true);
+
+  const updated = updateSettings(db, { slackEnabled: false });
+  assert.equal(updated.slackEnabled, false);
+  assert.equal(getSettings(db).slackEnabled, false);
+  updateSettings(db, { slackEnabled: true });
+  assert.equal(getSettings(db).slackEnabled, true);
+});
